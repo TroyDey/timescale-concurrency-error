@@ -1,0 +1,88 @@
+---
+version: '2'
+
+volumes:
+  tsdb-access-vol:
+    driver: local
+  tsdb-data1-vol:
+    driver: local
+  tsdb-data2-vol:
+    driver: local
+  tsdb-data3-vol:
+    driver: local
+  tsdb-data4-vol:
+    driver: local
+
+services:
+  tsdb-data1:
+    image: timescale/timescaledb:2.7.2-pg14
+    hostname: dn1
+    container_name: tsdb-data1
+    ports:
+      - "9434:5432"
+    volumes:
+      - tsdb-data1-vol:/var/lib/postgresql/data
+      - ./trust-all.sh:/docker-entrypoint-initdb.d/888_trust-all.sh
+      - ./data-init.sh:/docker-entrypoint-initdb.d/999_cluster.sh
+    environment: 
+      POSTGRES_PASSWORD: password
+
+  tsdb-data2:
+    image: timescale/timescaledb:2.7.2-pg14
+    hostname: dn2
+    container_name: tsdb-data2
+    ports:
+      - "9435:5432"
+    volumes:
+      - tsdb-data2-vol:/var/lib/postgresql/data
+      - ./trust-all.sh:/docker-entrypoint-initdb.d/888_trust-all.sh
+      - ./data-init.sh:/docker-entrypoint-initdb.d/999_cluster.sh
+    environment: 
+      POSTGRES_PASSWORD: password
+
+  tsdb-data3:
+    image: timescale/timescaledb:2.7.2-pg14
+    hostname: dn3
+    container_name: tsdb-data3
+    ports:
+      - "9436:5432"
+    volumes:
+      - tsdb-data3-vol:/var/lib/postgresql/data
+      - ./trust-all.sh:/docker-entrypoint-initdb.d/888_trust-all.sh
+      - ./data-init.sh:/docker-entrypoint-initdb.d/999_cluster.sh
+    environment: 
+      POSTGRES_PASSWORD: password
+
+  tsdb-data4:
+    image: timescale/timescaledb:2.7.2-pg14
+    hostname: dn4
+    container_name: tsdb-data4
+    ports:
+      - "9437:5432"
+    volumes:
+      - tsdb-data4-vol:/var/lib/postgresql/data
+      - ./trust-all.sh:/docker-entrypoint-initdb.d/888_trust-all.sh
+      - ./data-init.sh:/docker-entrypoint-initdb.d/999_cluster.sh
+    environment: 
+      POSTGRES_PASSWORD: password
+      
+  tsdb-access:
+    image: timescale/timescaledb:2.7.2-pg14
+    hostname: tsdb-access
+    container_name: tsdb-access
+    depends_on:
+      - tsdb-data1
+      - tsdb-data2
+      - tsdb-data3
+      - tsdb-data4
+    ports:
+      - "9433:5432"
+    volumes:
+      - tsdb-access-vol:/var/lib/postgresql/data
+      - ./trust-all.sh:/docker-entrypoint-initdb.d/666_trust-all.sh
+      - ./access-init.sh:/docker-entrypoint-initdb.d/777_cluster.sh
+      - ./setup-local-db.sql:/docker-entrypoint-initdb.d/888_setup-local-db.sql
+      - ./monitoringdb-setup.sql:/docker-entrypoint-initdb.d/999_monitoringdb-setup.sql
+    environment: 
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monitoringdb
